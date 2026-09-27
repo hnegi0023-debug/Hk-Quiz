@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardik's Quiz</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+  font-family:Arial,sans-serif; color:#fff; background:#050816;
+  overflow:hidden;
+}
+body:before,body:after{
+  content:""; position:fixed; width:320px; height:320px; border-radius:50%;
+  filter:blur(90px); opacity:.25; z-index:-1;
+}
+body:before{background:#00e5ff; top:-100px; left:-80px}
+body:after{background:#9b00ff; bottom:-120px; right:-80px}
+.card{
+  width:min(92%,650px); padding:28px; border:1px solid #00e5ff66;
+  border-radius:24px; background:#0a1024dd; box-shadow:0 0 35px #00e5ff22;
+  backdrop-filter:blur(12px);
+}
+h1{margin:0 0 8px; text-align:center; font-size:clamp(2rem,7vw,3.3rem); letter-spacing:2px}
+.subtitle{text-align:center;color:#8eefff;margin-bottom:24px}
+.top{display:flex;justify-content:space-between;color:#b8c7e8;font-size:.95rem;margin-bottom:10px}
+.bar{height:8px;background:#18213c;border-radius:10px;overflow:hidden;margin-bottom:25px}
+.fill{height:100%;width:0;background:#00e5ff;box-shadow:0 0 15px #00e5ff;transition:.35s}
+.question{font-size:1.35rem;font-weight:700;line-height:1.4;margin-bottom:20px}
+.answers{display:grid;gap:12px}
+button{
+  width:100%; padding:15px 16px; border-radius:14px; border:1px solid #314268;
+  background:#111a33;color:white;font-size:1rem;text-align:left;cursor:pointer;
+  transition:.18s; font-weight:600;
+}
+button:hover{transform:translateY(-2px);border-color:#00e5ff;box-shadow:0 0 16px #00e5ff33}
+button.correct{background:#0c4b3a;border-color:#2cffb0}
+button.wrong{background:#5a1e2c;border-color:#ff5277}
+button:disabled{cursor:default}
+.next{
+  margin-top:18px;text-align:center;background:#00e5ff;color:#031018;
+  border:0;text-align:center;font-weight:800;display:none;
+}
+.next:hover{background:#55f0ff;box-shadow:0 0 25px #00e5ff66}
+.result{text-align:center;display:none}
+.score{font-size:4rem;font-weight:900;color:#00e5ff;text-shadow:0 0 20px #00e5ff66}
+.restart{text-align:center;background:#9b00ff;border:0;margin-top:18px}
+.small{color:#9eacc9;margin-top:15px;font-size:.9rem}
+</style>
+</head>
+<body>
+<main class="card">
+  <section id="quiz">
+    <h1>HARDIK'S QUIZ</h1>
+    <div class="subtitle">⚡ FUTURE • GAMING • CHALLENGE ⚡</div>
+    <div class="top"><span id="count">Question 1 / 5</span><span id="score">Score: 0</span></div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <div class="question" id="question"></div>
+    <div class="answers" id="answers"></div>
+    <button class="next" id="next">NEXT ▶</button>
+  </section>
+
+  <section class="result" id="result">
+    <h1>QUIZ COMPLETE</h1>
+    <p>Your final score</p>
+    <div class="score" id="finalScore">0 / 5</div>
+    <p id="message"></p>
+    <button class="restart" id="restart">PLAY AGAIN ↻</button>
+    <div class="small">Hardik's Quiz • Thanks for playing!</div>
+  </section>
+</main>
+
+<script>
+const questions = [
+  {
+    q:"Where is CAS School?",
+    options:["Umaria","Shahdol","Delhi","Maanpur"],
+    answer:"Umaria"
+  },
+  {
+    q:"Who is the class teacher of Class 8th?",
+    options:["Vijaya Parihar Ma'am","Payal Agarwal Ma'am","Moin Sir","Hanif Sir"],
+    answer:"Vijaya Parihar Ma'am"
+  },
+  {
+    q:"Who is the subject teacher of Science in Class 8?",
+    options:["Poonam Ma'am","Payal Ma'am","Aarti Pandey Ma'am","Hanif Sir"],
+    answer:"Aarti Pandey Ma'am"
+  },
+  {
+    q:"How many students are in Class Section B?",
+    options:["25","31","26","27"],
+    answer:"27"
+  },
+  {
+    q:"Who is the principal of CAS School?",
+    options:["Pyle Ma'am","Nukur Ma'am","Sonia Mishra Ma'am","Aarti Pandey Ma'am"],
+    answer:"Sonia Mishra Ma'am"
+  }
+];
+
+let current=0, score=0, locked=false;
+
+const qEl=document.getElementById("question");
+const aEl=document.getElementById("answers");
+const countEl=document.getElementById("count");
+const scoreEl=document.getElementById("score");
+const fillEl=document.getElementById("fill");
+const nextEl=document.getElementById("next");
+
+function shuffle(arr){
+  return [...arr].sort(()=>Math.random()-0.5);
+}
+
+function loadQuestion(){
+  locked=false;
+  nextEl.style.display="none";
+  const item=questions[current];
+  qEl.textContent=item.q;
+  countEl.textContent=`Question ${current+1} / ${questions.length}`;
+  fillEl.style.width=`${(current/questions.length)*100}%`;
+  aEl.innerHTML="";
+  shuffle(item.options).forEach(option=>{
+    const btn=document.createElement("button");
+    btn.textContent=option;
+    btn.onclick=()=>choose(btn,option,item.answer);
+    aEl.appendChild(btn);
+  });
+}
+
+function choose(btn,selected,correct){
+  if(locked)return;
+  locked=true;
+  [...aEl.children].forEach(b=>b.disabled=true);
+  if(selected===correct){
+    btn.classList.add("correct");
+    score++;
+    scoreEl.textContent=`Score: ${score}`;
+  }else{
+    btn.classList.add("wrong");
+    [...aEl.children].forEach(b=>{
+      if(b.textContent===correct)b.classList.add("correct");
+    });
+  }
+  nextEl.style.display="block";
+}
+
+nextEl.onclick=()=>{
+  current++;
+  if(current<questions.length) loadQuestion();
+  else finish();
+};
+
+function finish(){
+  document.getElementById("quiz").style.display="none";
+  document.getElementById("result").style.display="block";
+  document.getElementById("finalScore").textContent=`${score} / ${questions.length}`;
+  document.getElementById("message").textContent =
+    score===questions.length ? "🔥 PERFECT SCORE! You're a quiz master!" :
+    score>=3 ? "⚡ Great job! Try again and beat your score." :
+    "🎮 Good try! Run it again and level up.";
+}
+
+document.getElementById("restart").onclick=()=>{
+  current=0; score=0;
+  scoreEl.textContent="Score: 0";
+  document.getElementById("result").style.display="none";
+  document.getElementById("quiz").style.display="block";
+  loadQuestion();
+};
+
+loadQuestion();
+</script>
+</body>
+</html>
